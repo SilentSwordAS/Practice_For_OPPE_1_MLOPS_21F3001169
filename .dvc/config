@@ -1,0 +1,4 @@
+[core]
+    remote = bucket_remote
+['remote "bucket_remote"']
+    url = gs://mlops-week1-seventh-seeker-473207-h9/dvc_prac
