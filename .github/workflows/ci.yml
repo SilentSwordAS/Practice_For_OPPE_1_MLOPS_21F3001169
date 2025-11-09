@@ -31,7 +31,6 @@ jobs:
           cd feast-iris-tutorial && feast apply
       - name: DVC Pull and Checkout For Generating the data files
         run: |
-          dvc remote add -d bucket_remote gs://mlops-week1-seventh-seeker-473207-h9/dvc_prac/
           dvc pull
           dvc checkout
       - name: PyTest File Execution
