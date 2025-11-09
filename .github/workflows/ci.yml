@@ -1,0 +1,50 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Python Setup
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install Requirements
+        run: |
+          pip install dvc dvc_gs pandas joblib pytest scikit-learn==1.7.2 feast 'feast[gcp]' mlflow
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Initializing feast
+        run: |
+          cd feast-iris-tutorial && feast apply
+      - name: DVC Pull and Checkout For Generating the data files
+        run: |
+          dvc remote add -d bucket_remote gs://mlops-week1-seventh-seeker-473207-h9/dvc_prac/
+          dvc pull
+          dvc checkout
+      - name: PyTest File Execution
+        run: |
+          pytest -s test_evaluation.py > results.txt
+          cat results.txt 
+      - name: Setup CML
+        uses: iterative/setup-cml@v3
+
+      - name: Post CML report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## Pytest results" > report.md
+          cat results.txt >> report.md
+          cml comment create report.md
